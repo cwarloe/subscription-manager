@@ -70,11 +70,12 @@ For another host:
 
 ## Private GitHub repository
 
+The source is in the private repository [cwarloe/subscription-benefits](https://github.com/cwarloe/subscription-benefits). Later changes:
+
 ```bash
-git init
 git add .
-git commit -m "Add Subscription Benefits ledger"
-gh repo create subscription-benefits --private --source=. --remote=origin --push
+git commit -m "Describe the change"
+git push
 ```
 
 Do not commit `.env`, database files, or screenshots.
