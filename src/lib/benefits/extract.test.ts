@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { excerptSupportsAmount, htmlToText, sameRegistrableHost, validateExtraction } from "./extract.ts";
+import { excerptSupportsAmount, htmlToText, priceNearName, pricingText, sameRegistrableHost, validateExtraction } from "./extract.ts";
 
 describe("extraction", () => {
   it("accepts a price only when the excerpt is on the page", () => {
@@ -32,6 +32,37 @@ describe("extraction", () => {
     assert.equal(parsed.plans[0].priceCents, 1599);
     assert.equal(parsed.plans[0].studentPriceCents, null);
     assert.equal(parsed.annualFeeCents, null);
+  });
+
+  it("decodes prices and keeps a plan only next to its own amount", () => {
+    const page = htmlToText("<p>Pro is &#36;20 a month. Ultra is $200 a month.</p>");
+    assert.match(page, /\$20/);
+    assert.equal(priceNearName(page, "Pro", 2000), true);
+    assert.equal(priceNearName(page, "Pro", 20000), false);
+    assert.equal(priceNearName(page, "Ultra", 20000), true);
+    const table = "standard with ads : $8.99 / month standard : $19.99 / month";
+    assert.equal(priceNearName(table, "Standard", 899), false);
+    assert.equal(priceNearName(table, "Standard", 1999), true);
+    assert.equal(priceNearName(table, "Standard with ads", 899), true);
+    assert.equal(
+      priceNearName("plus do more with advanced intelligence $20 / month", "Plus", 2000),
+      true,
+    );
+    const crowded = pricingText(
+      `<style>${".x".repeat(5000)}{color:red}</style><p>Standard with ads is $7.99 a month.</p>`,
+    );
+    assert.match(crowded, /\$7\.99/);
+    const raw = JSON.stringify({
+      plans: [
+        {
+          name: "Ultra",
+          billing_period: "monthly",
+          price_cents: 2000,
+          excerpt: "Pro is $20 a month",
+        },
+      ],
+    });
+    assert.equal(validateExtraction(raw, page).plans.length, 0);
   });
 
   it("keeps redirects on the same site", () => {

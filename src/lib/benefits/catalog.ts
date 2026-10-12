@@ -23,8 +23,8 @@ export const SERVICES: ServiceSeed[] = [
     id: "chatgpt",
     name: "ChatGPT",
     category: "AI",
-    officialUrl: "https://openai.com/chatgpt/pricing/",
-    notes: "Consumer ChatGPT plans are sold by OpenAI. Business plans are separate.",
+    officialUrl: "https://chatgpt.com/pricing/",
+    notes: "Consumer ChatGPT plans are sold on the ChatGPT pricing page. Business plans are separate.",
   },
   {
     id: "claude",
@@ -149,8 +149,8 @@ export const SERVICES: ServiceSeed[] = [
     id: "netflix",
     name: "Netflix",
     category: "Video",
-    officialUrl: "https://www.netflix.com/",
-    notes: "U.S. plans. Ads and extra-member add-ons are separate charges.",
+    officialUrl: "https://help.netflix.com/en/node/24926",
+    notes: "US plan prices come from the Netflix Help Center. Ads and extra-member add-ons are separate charges.",
   },
   {
     id: "hulu",

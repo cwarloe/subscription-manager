@@ -10,6 +10,7 @@ import {
   type BenefitKind,
   type BillingPeriod,
   type Verification,
+  firstOfNextMonth,
 } from "./money";
 
 export type ServiceRow = {
@@ -142,10 +143,11 @@ export type Ledger = {
   refresh: { id: string; status: string; message: string; items: RefreshItem[] } | null;
 };
 
-const g = globalThis as { __benefitsSeeded?: boolean };
+const g = globalThis as { __benefitsSeeded?: string };
+const CATALOG_VERSION = "2026-10-urls";
 
 async function ensureCatalog(sql: Sql) {
-  if (g.__benefitsSeeded) return;
+  if (g.__benefitsSeeded === CATALOG_VERSION) return;
   for (const service of SERVICES) {
     await sql`
       insert into services (id, name, category, official_url, notes)
@@ -173,7 +175,7 @@ async function ensureCatalog(sql: Sql) {
         separates_from = excluded.separates_from
     `;
   }
-  g.__benefitsSeeded = true;
+  g.__benefitsSeeded = CATALOG_VERSION;
 }
 
 function text(value: unknown): string | null {
@@ -361,6 +363,16 @@ async function readLedger(sql: Sql, userId: string): Promise<Ledger> {
     from monthly_entries where user_id = ${userId}
     order by year_month desc, created_at desc
   `;
+  const renewalDefault = firstOfNextMonth();
+  if (subscriptions.some((row) => !row.renewal_date)) {
+    await sql`
+      update subscriptions set renewal_date = ${renewalDefault}
+      where user_id = ${userId} and renewal_date is null
+    `;
+    for (const row of subscriptions) {
+      if (!row.renewal_date) row.renewal_date = renewalDefault;
+    }
+  }
   const runs = await sql<{ id: string; status: string; message: string }>`
     select id, status, message from refresh_runs
     where user_id = ${userId}
@@ -837,6 +849,7 @@ export const saveSubscription = createServerFn({ method: "POST" })
       if (!card[0]) throw new Error("Choose a card you hold.");
     }
     const id = data.id || crypto.randomUUID();
+    const renewalDate = data.renewalDate ?? firstOfNextMonth();
     const owned = await sql<{ id: string }>`
       select id from subscriptions where id = ${id} and user_id = ${context.userId}
     `;
@@ -844,7 +857,7 @@ export const saveSubscription = createServerFn({ method: "POST" })
       await sql`
         update subscriptions set
           service_id = ${data.serviceId}, plan_quote_id = ${data.planQuoteId}, user_card_id = ${data.userCardId},
-          billing_frequency = ${data.billing}, renewal_date = ${data.renewalDate},
+          billing_frequency = ${data.billing}, renewal_date = ${renewalDate},
           price_override_cents = ${data.priceOverrideCents}, status = ${data.status}, notes = ${data.notes}
         where id = ${id} and user_id = ${context.userId}
       `;
@@ -855,7 +868,7 @@ export const saveSubscription = createServerFn({ method: "POST" })
           price_override_cents, status, notes
         ) values (
           ${id}, ${context.userId}, ${data.serviceId}, ${data.planQuoteId}, ${data.userCardId},
-          ${data.billing}, ${data.renewalDate}, ${data.priceOverrideCents}, ${data.status}, ${data.notes}
+          ${data.billing}, ${renewalDate}, ${data.priceOverrideCents}, ${data.status}, ${data.notes}
         )
       `;
     }

@@ -1,7 +1,7 @@
 import { CARDS, SERVICES } from "./catalog";
 import { getSql, type Sql } from "@/lib/db";
 import {
-  htmlToText,
+  pricingText,
   sameRegistrableHost,
   validateExtraction,
   type ExtractedBenefit,
@@ -13,6 +13,7 @@ Never invent a price, fee, rate, expiration, or eligibility rule.
 If the text does not explicitly state a number, use null.
 price_cents, student_price_cents, military_price_cents, amount_cents, and annual_fee_cents are integer US cents.
 Every non-null cents field needs an excerpt that is a verbatim substring of the page and contains that dollar amount.
+For a plan, copy an excerpt that includes that plan's name and its price, exactly as the page shows them. Do not reuse one plan's price for another plan.
 rate_bps is the cash-back percent times 100, so 3% is 300. Use null if the page does not state a percent.
 points_per_dollar_milli is points per dollar times 1000, so 3x is 3000. Use null if unstated.
 billing_period and period must be monthly, quarterly, semiannual, or annual.
@@ -23,37 +24,175 @@ enrollment_required is true only if the page says the benefit must be enrolled o
 eligible_service_ids may only contain ids from the list you are given, and only when the page names that brand.
 Ignore welcome bonuses and limited-time account offers that are not the standing price or benefit.`;
 
-async function fetchOfficial(officialUrl: string): Promise<{ finalUrl: string; text: string }> {
-  const response = await fetch(officialUrl, {
+const BROWSER_HEADERS = {
+  Accept: "text/html,application/xhtml+xml",
+  "Accept-Language": "en-US,en;q=0.9",
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+};
+
+function hasDollar(text: string): boolean {
+  return /\$\s?\d/.test(text);
+}
+
+async function readHtml(url: string): Promise<{ finalUrl: string; html: string }> {
+  const response = await fetch(url, {
     redirect: "follow",
-    signal: AbortSignal.timeout(12_000),
-    headers: {
-      Accept: "text/html,application/xhtml+xml",
-      "User-Agent": "SubscriptionBenefits/1.0 (personal official-page checker)",
-    },
+    signal: AbortSignal.timeout(15_000),
+    headers: BROWSER_HEADERS,
   });
   if (!response.ok) throw new Error(`Official page returned HTTP ${response.status}.`);
-  if (!sameRegistrableHost(officialUrl, response.url)) {
+  if (!sameRegistrableHost(url, response.url)) {
     throw new Error("The official page redirected to a different site. Nothing was saved.");
   }
   const reader = response.body?.getReader();
   if (!reader) throw new Error("The official page was empty.");
   const decoder = new TextDecoder();
-  let raw = "";
+  let html = "";
   let total = 0;
-  while (total < 350_000) {
+  while (total < 5_000_000) {
     const step = await reader.read();
     if (step.done) break;
     total += step.value.byteLength;
-    raw += decoder.decode(step.value, { stream: true });
+    html += decoder.decode(step.value, { stream: true });
   }
+  html += decoder.decode();
   await reader.cancel().catch(() => undefined);
-  const text = htmlToText(raw).slice(0, 12_000);
-  if (text.length < 40) throw new Error("The official page had no readable pricing text.");
-  return { finalUrl: response.url, text };
+  return { finalUrl: response.url, html };
 }
 
-async function extractWithModel(label: string, kind: "service" | "card", pageText: string): Promise<string> {
+async function fetchOfficial(officialUrl: string): Promise<{ finalUrl: string; text: string }> {
+  const page = await readHtml(officialUrl);
+  const text = pricingText(page.html);
+  if (text.length < 40) throw new Error("The official page had no readable pricing text.");
+  return { finalUrl: page.finalUrl, text };
+}
+
+function urlsFromSearch(body: unknown): string[] {
+  const record = body && typeof body === "object" ? (body as { output?: unknown }) : {};
+  const output = Array.isArray(record.output) ? record.output : [];
+  const found: string[] = [];
+  for (const item of output) {
+    if (!item || typeof item !== "object") continue;
+    const row = item as {
+      action?: { url?: unknown; sources?: { url?: unknown }[] };
+      content?: { text?: unknown; annotations?: { url?: unknown }[] }[];
+    };
+    if (typeof row.action?.url === "string") found.push(row.action.url);
+    for (const source of row.action?.sources ?? []) {
+      if (typeof source.url === "string") found.push(source.url);
+    }
+    for (const content of row.content ?? []) {
+      if (typeof content.text === "string") {
+        found.push(...(content.text.match(/https:\/\/[^\s)"']+/g) ?? []));
+      }
+      for (const note of content.annotations ?? []) {
+        if (typeof note.url === "string") found.push(note.url);
+      }
+    }
+  }
+  return found;
+}
+
+/** One short same-site search when the stored page itself has no prices. */
+async function discoverPricedUrl(officialUrl: string, label: string): Promise<string | null> {
+  const apiKey = process.env.XAI_API_KEY;
+  if (!apiKey) return null;
+  const domain = new URL(officialUrl).hostname.replace(/^www\./, "").split(".").slice(-2).join(".");
+  const response = await fetch("https://api.x.ai/v1/responses", {
+    method: "POST",
+    signal: AbortSignal.timeout(35_000),
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: "grok-4.5",
+      temperature: 0,
+      max_output_tokens: 300,
+      max_tool_calls: 2,
+      tools: [{ type: "web_search", filters: { allowed_domains: [domain] } }],
+      input: [
+        {
+          role: "user",
+          content: `Find the current official US pricing page for ${label} on ${domain}. Reply with one https URL from that site and nothing else.`,
+        },
+      ],
+    }),
+  });
+  if (!response.ok) return null;
+  const body = (await response.json()) as unknown;
+  for (const candidate of urlsFromSearch(body)) {
+    const clean = candidate.replace(/[.,]+$/, "");
+    if (!sameRegistrableHost(officialUrl, clean)) continue;
+    if (clean === officialUrl) continue;
+    return clean;
+  }
+  return null;
+}
+
+async function renderedText(url: string): Promise<string | null> {
+  let browser: import("playwright").Browser | null = null;
+  try {
+    const { chromium } = await import("playwright");
+    browser = await chromium.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-dev-shm-usage"],
+    });
+    const page = await browser.newPage({ userAgent: BROWSER_HEADERS["User-Agent"] });
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 20_000 });
+    await page
+      .waitForFunction(() => /\$\s?\d/.test(document.body?.innerText ?? ""), undefined, { timeout: 8_000 })
+      .catch(() => undefined);
+    let text = (await page.locator("body").innerText({ timeout: 5_000 })).replace(/\s+/g, " ").trim();
+    if (!hasDollar(text)) text = pricingText(await page.content());
+    return hasDollar(text) ? text.slice(0, 12_000) : null;
+  } catch {
+    return null;
+  } finally {
+    await browser?.close().catch(() => undefined);
+  }
+}
+
+async function loadPricedPage(
+  officialUrl: string,
+  label: string,
+): Promise<{ finalUrl: string; text: string }> {
+  let firstError: Error | null = null;
+  try {
+    const page = await fetchOfficial(officialUrl);
+    if (hasDollar(page.text)) return page;
+    firstError = new Error("The official page had no readable prices.");
+  } catch (error) {
+    firstError = error instanceof Error ? error : new Error("The official page could not be read.");
+  }
+  const rendered = await renderedText(officialUrl);
+  if (rendered) return { finalUrl: officialUrl, text: rendered };
+  const found = await discoverPricedUrl(officialUrl, label);
+  if (found) {
+    try {
+      const page = await fetchOfficial(found);
+      if (hasDollar(page.text)) return page;
+      const renderedFound = await renderedText(found);
+      if (renderedFound) return { finalUrl: found, text: renderedFound };
+    } catch {
+      // The stored page's error is more useful than a failed follow-up.
+    }
+  }
+  if (!process.env.XAI_API_KEY && firstError) {
+    throw new Error(
+      `${firstError.message} Live search is off because the server has no XAI_API_KEY.`,
+    );
+  }
+  throw firstError ?? new Error("The official page had no readable prices.");
+}
+
+async function extractWithModel(
+  label: string,
+  kind: "service" | "card",
+  pageText: string,
+  nudge = "",
+): Promise<string> {
   const apiKey = process.env.XAI_API_KEY;
   if (!apiKey) {
     throw new Error(
@@ -81,7 +220,7 @@ async function extractWithModel(label: string, kind: "service" | "card", pageTex
         { role: "system", content: SYSTEM },
         {
           role: "user",
-          content: `${ask}\nService ids:\n${catalog}\n\nReturn JSON with keys plans, annual_fee_cents, annual_fee_excerpt, benefits.\n\nPAGE TEXT:\n${pageText}`,
+          content: `${ask}\n${nudge}\nService ids:\n${catalog}\n\nReturn JSON with keys plans, annual_fee_cents, annual_fee_excerpt, benefits.\n\nPAGE TEXT:\n${pageText}`,
         },
       ],
     }),
@@ -303,9 +442,27 @@ async function refreshTarget(
   const officialUrl = kind === "service" ? service?.officialUrl : card?.officialUrl;
   const label = kind === "service" ? service?.name : card?.name;
   if (!officialUrl || !label) throw new Error("That catalog item does not exist.");
-  const page = await fetchOfficial(officialUrl);
-  const raw = await extractWithModel(label, kind, page.text);
-  const extracted = validateExtraction(raw, page.text);
+  const page = await loadPricedPage(officialUrl, label);
+  let raw = await extractWithModel(label, kind, page.text);
+  let extracted = validateExtraction(raw, page.text);
+  if (kind === "service" && extracted.plans.length === 0) {
+    raw = await extractWithModel(
+      label,
+      kind,
+      page.text,
+      "Tie each price to its own plan. The excerpt must include that plan's name and the price copied from the page.",
+    );
+    extracted = validateExtraction(raw, page.text);
+  }
+  if (kind === "card" && extracted.annualFeeCents == null && extracted.benefits.length === 0) {
+    raw = await extractWithModel(
+      label,
+      kind,
+      page.text,
+      "Copy the annual fee and each standing benefit only when the excerpt contains the dollar amount or rate from the page.",
+    );
+    extracted = validateExtraction(raw, page.text);
+  }
   if (kind === "service") {
     if (extracted.plans.length === 0) {
       throw new Error("No plan price on the official page could be matched to a quote from that page.");

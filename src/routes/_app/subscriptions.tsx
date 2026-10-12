@@ -17,7 +17,7 @@ function SubscriptionsPage() {
       <div>
         <h2 className="text-3xl">My subscriptions</h2>
         <p className="max-w-2xl text-sm text-pretty text-muted">
-          Pick the plan, the card that pays, how often you are billed, and the renewal date. An override replaces the quote for your bill only.
+          Pick the plan, the card that pays, and how often you are billed. Leave the renewal date blank to use the 1st of next month. A monthly plan is still charged every month.
         </p>
       </div>
       <ul className="grid gap-3">
@@ -41,7 +41,7 @@ function SubscriptionsPage() {
                 <div>
                   <h3 className="text-xl">{service?.name ?? sub.serviceId}</h3>
                   <p>{plan?.name ?? "No plan quote"} · {sub.billing} · {sub.status}</p>
-                  <p>Pays with {cardName ?? "no card selected"} · Renews {sub.renewalDate ?? "unknown"}</p>
+                  <p>Pays with {cardName ?? "no card selected"} · {sub.billing === "monthly" ? "Billed every month" : `Renews ${sub.renewalDate}`}</p>
                   <p>Price used <Money cents={price.cents} /> · {price.basis}</p>
                 </div>
                 <StatusPill status={price.verification} />
@@ -127,6 +127,7 @@ function SubscriptionForm({ id, onDone }: { id?: string; onDone: () => void }) {
       </Field>
       <Field label="Renewal date">
         <input type="date" className={controlClass} value={renewalDate} onChange={(event) => setRenewalDate(event.target.value)} />
+        <span className="font-normal text-muted">Optional. Blank saves the 1st of next month. Monthly bills do not wait for that date.</span>
       </Field>
       <Field label="Price override (USD)">
         <input className={controlClass} inputMode="decimal" value={override} onChange={(event) => setOverride(event.target.value)} placeholder="Blank to use the quote" />

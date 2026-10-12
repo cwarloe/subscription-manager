@@ -31,7 +31,7 @@ Official pages are linked on each service and card. Last attempt and last succes
 
 There is no public price API for these consumer plans that this app can call. Refresh does this instead:
 
-1. You press Refresh. The server fetches that product's stored official HTTPS page (redirects must stay on the same site).
+1. You press Refresh. The server fetches that product's stored official HTTPS page (redirects must stay on the same site). If that download has no prices, it opens the page so prices written by the page itself can be read, then tries one other page on the same site.
 2. If `XAI_API_KEY` is set, one `grok-4.5` chat completion reads that page text and returns JSON. A full pass checks at most 8 pages so a click cannot fan out across the whole catalog. Press Refresh again for the next batch. Subscribed services and cards you hold go first.
 3. A price is saved as verified only when the model's excerpt appears in the page text and contains that dollar amount. Other numbers are dropped.
 4. If the fetch or the model fails, the previous amount stays and, if it had been verified, becomes stale. The failure is listed on the refresh panel.

@@ -62,6 +62,12 @@ export function centsToDollarInput(cents: number | null): string {
   return `${dollars}.${remainder}`;
 }
 
+export function firstOfNextMonth(now = new Date()): string {
+  const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+  const month = String(next.getUTCMonth() + 1).padStart(2, "0");
+  return `${next.getUTCFullYear()}-${month}-01`;
+}
+
 export function monthlyEquivalent(cents: number, period: BillingPeriod): number {
   return Math.round(cents / periodMonths(period));
 }

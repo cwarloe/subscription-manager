@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { buildMonthEstimate, confirmedTotals, selectPrice } from "./calc.ts";
-import { dollarsToCents, formatCents, isChargeMonth, monthlyEquivalent, periodKey } from "./money.ts";
+import { dollarsToCents, firstOfNextMonth, formatCents, isChargeMonth, monthlyEquivalent, periodKey } from "./money.ts";
 import type { BenefitInput, EstimateInput, PlanQuoteInput, SubscriptionInput } from "./calc.ts";
 
 const base = (): EstimateInput => ({
@@ -43,6 +43,11 @@ function sub(partial: Partial<SubscriptionInput> & Pick<SubscriptionInput, "id" 
 }
 
 describe("money", () => {
+  it("places a blank renewal on the first day of next month", () => {
+    assert.equal(firstOfNextMonth(new Date("2026-10-11T18:00:00Z")), "2026-11-01");
+    assert.equal(firstOfNextMonth(new Date("2026-12-31T00:00:00Z")), "2027-01-01");
+  });
+
   it("parses dollars to integer cents and rejects junk", () => {
     assert.equal(dollarsToCents("15.99"), 1599);
     assert.equal(dollarsToCents("10"), 1000);

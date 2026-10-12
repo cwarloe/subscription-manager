@@ -175,6 +175,9 @@ export default defineConfig(({ command, isPreview }) => ({
             // manifest + head-tag middleware). Nitro v3 defaults serverDir to
             // false, so removing this silently unwires /?install=1 on deploys.
             serverDir: "./server",
+            // Playwright is a preview-only fallback for pages that hide prices
+            // in JavaScript. It is not installed on the deployed function.
+            externals: { external: ["playwright"] },
           }),
         ]
       : []),
