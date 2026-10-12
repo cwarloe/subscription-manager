@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, type FormEvent } from "react";
 import { Field, Money, SourceLine, StatusPill, controlClass, useLedger } from "@/components/benefits/chrome";
 import { deletePlan, savePlan } from "@/lib/benefits/api";
-import { BILLING_PERIODS, dollarsToCents } from "@/lib/benefits/money";
+import { BILLING_PERIODS, dollarsToCents, formatCents } from "@/lib/benefits/money";
 
 export const Route = createFileRoute("/_app/catalog")({ component: Catalog });
 
@@ -75,7 +75,16 @@ function Catalog() {
                   {plans.map((plan) => (
                     <li key={plan.id} className="rounded-lg border border-line px-3 py-2 text-sm">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="font-semibold">{plan.name} · {plan.billing}</p>
+                        <p className="font-semibold">
+                          {plan.name} · {plan.billing}
+                          {plan.priceCents != null
+                            ? ` · ${formatCents(plan.priceCents)}`
+                            : plan.studentPriceCents != null
+                              ? ` · student ${formatCents(plan.studentPriceCents)}`
+                              : plan.militaryPriceCents != null
+                                ? ` · military ${formatCents(plan.militaryPriceCents)}`
+                                : ""}
+                        </p>
                         <StatusPill status={plan.verification} />
                       </div>
                       <p className="mt-1">
@@ -94,7 +103,7 @@ function Catalog() {
                 </ul>
               )}
               <button type="button" className="mt-3 text-sm font-semibold text-forest" onClick={() => setOpenId(openId === service.id ? null : service.id)}>
-                {openId === service.id ? "Close form" : "Enter a plan I pay for"}
+                {openId === service.id ? "Close form" : "Enter what I pay"}
               </button>
               {openId === service.id ? <PlanForm serviceId={service.id} onDone={() => setOpenId(null)} /> : null}
             </li>
@@ -142,7 +151,9 @@ function PlanForm({ serviceId, onDone }: { serviceId: string; onDone: () => void
 
   return (
     <form onSubmit={submit} className="mt-3 grid gap-3 border-t border-line pt-3 md:grid-cols-2">
-      <Field label="Plan name"><input className={controlClass} value={name} onChange={(event) => setName(event.target.value)} required /></Field>
+      <Field label="Plan name">
+        <input className={controlClass} value={name} onChange={(event) => setName(event.target.value)} placeholder="Optional. Blank uses the service name." />
+      </Field>
       <Field label="Billing">
         <select className={controlClass} value={billing} onChange={(event) => setBilling(event.target.value)}>
           {periods.map((item) => <option key={item} value={item}>{item}</option>)}

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Field, Money, StatusPill, controlClass, useLedger } from "@/components/benefits/chrome";
 import { deleteSubscription, saveSubscription } from "@/lib/benefits/api";
-import { BILLING_PERIODS, dollarsToCents } from "@/lib/benefits/money";
+import { BILLING_PERIODS, dollarsToCents, formatCents } from "@/lib/benefits/money";
 import { selectPrice } from "@/lib/benefits/calc";
 
 export const Route = createFileRoute("/_app/subscriptions")({ component: SubscriptionsPage });
@@ -17,7 +17,7 @@ function SubscriptionsPage() {
       <div>
         <h2 className="text-3xl">My subscriptions</h2>
         <p className="max-w-2xl text-sm text-pretty text-muted">
-          Pick the plan, the card that pays, and how often you are billed. Leave the renewal date blank to use the 1st of next month. A monthly plan is still charged every month.
+          Pick the service and how often you are billed. A plan name is only listed when that quote has a price. Otherwise enter what you pay. Leave the renewal date blank to use the 1st of next month.
         </p>
       </div>
       <ul className="grid gap-3">
@@ -40,7 +40,14 @@ function SubscriptionsPage() {
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
                   <h3 className="text-xl">{service?.name ?? sub.serviceId}</h3>
-                  <p>{plan?.name ?? "No plan quote"} · {sub.billing} · {sub.status}</p>
+                  <p>
+                    {plan && price.cents != null
+                      ? `${plan.name} · ${formatCents(price.cents)} · `
+                      : sub.priceOverrideCents != null
+                        ? `Your price · ${formatCents(sub.priceOverrideCents)} · `
+                        : ""}
+                    {sub.billing} · {sub.status}
+                  </p>
                   <p>Pays with {cardName ?? "no card selected"} · {sub.billing === "monthly" ? "Billed every month" : `Renews ${sub.renewalDate}`}</p>
                   <p>Price used <Money cents={price.cents} /> · {price.basis}</p>
                 </div>
@@ -77,7 +84,11 @@ function SubscriptionForm({ id, onDone }: { id?: string; onDone: () => void }) {
   const [status, setStatus] = useState(existing?.status ?? "active");
   const [notes, setNotes] = useState(existing?.notes ?? "");
   if (!ledger) return null;
-  const plans = ledger.plans.filter((plan) => plan.serviceId === serviceId);
+  const plans = ledger.plans.filter(
+    (plan) =>
+      plan.serviceId === serviceId &&
+      (plan.priceCents != null || plan.studentPriceCents != null || plan.militaryPriceCents != null),
+  );
 
   return (
     <form
@@ -89,7 +100,7 @@ function SubscriptionForm({ id, onDone }: { id?: string; onDone: () => void }) {
             data: {
               id,
               serviceId,
-              planQuoteId: planQuoteId || null,
+              planQuoteId: plans.some((plan) => plan.id === planQuoteId) ? planQuoteId : null,
               userCardId: userCardId || null,
               billing,
               renewalDate: renewalDate || null,
@@ -106,12 +117,26 @@ function SubscriptionForm({ id, onDone }: { id?: string; onDone: () => void }) {
           {ledger.services.map((service) => <option key={service.id} value={service.id}>{service.name}</option>)}
         </select>
       </Field>
-      <Field label="Plan quote">
-        <select className={controlClass} value={planQuoteId} onChange={(event) => setPlanQuoteId(event.target.value)}>
-          <option value="">None</option>
-          {plans.map((plan) => <option key={plan.id} value={plan.id}>{plan.name} · {plan.billing}</option>)}
-        </select>
-      </Field>
+      {plans.length > 0 ? (
+        <Field label="Quote">
+          <select className={controlClass} value={planQuoteId} onChange={(event) => setPlanQuoteId(event.target.value)}>
+            <option value="">None — I’ll enter what I pay</option>
+            {plans.map((plan) => (
+              <option key={plan.id} value={plan.id}>
+                {[
+                  plan.name,
+                  plan.billing,
+                  plan.priceCents != null ? `list ${formatCents(plan.priceCents)}` : null,
+                  plan.studentPriceCents != null ? `student ${formatCents(plan.studentPriceCents)}` : null,
+                  plan.militaryPriceCents != null ? `military ${formatCents(plan.militaryPriceCents)}` : null,
+                ].filter(Boolean).join(" · ")}
+              </option>
+            ))}
+          </select>
+        </Field>
+      ) : (
+        <p className="text-sm text-muted md:col-span-2">No priced quote for this service. Enter what you pay. A plan name is not asked until a price is on file.</p>
+      )}
       <Field label="Payment card">
         <select className={controlClass} value={userCardId} onChange={(event) => setUserCardId(event.target.value)}>
           <option value="">None</option>
@@ -129,8 +154,8 @@ function SubscriptionForm({ id, onDone }: { id?: string; onDone: () => void }) {
         <input type="date" className={controlClass} value={renewalDate} onChange={(event) => setRenewalDate(event.target.value)} />
         <span className="font-normal text-muted">Optional. Blank saves the 1st of next month. Monthly bills do not wait for that date.</span>
       </Field>
-      <Field label="Price override (USD)">
-        <input className={controlClass} inputMode="decimal" value={override} onChange={(event) => setOverride(event.target.value)} placeholder="Blank to use the quote" />
+      <Field label={planQuoteId ? "Price override (USD)" : "What you pay (USD)"}>
+        <input className={controlClass} inputMode="decimal" value={override} onChange={(event) => setOverride(event.target.value)} placeholder={planQuoteId ? "Blank to use the quote" : "Unknown if blank"} />
       </Field>
       <Field label="Status">
         <select className={controlClass} value={status} onChange={(event) => setStatus(event.target.value as typeof status)}>

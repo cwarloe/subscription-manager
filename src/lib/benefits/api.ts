@@ -559,7 +559,7 @@ export const savePlan = createServerFn({ method: "POST" })
     if (!SERVICES.some((service) => service.id === input.serviceId)) throw new Error("Unknown service.");
     return {
       ...input,
-      name: required(input.name, "Plan name"),
+      name: optionalText(input.name, 120) || SERVICES.find((service) => service.id === input.serviceId)?.name || "What I pay",
       billing: period(input.billing),
       priceCents: cents(input.priceCents),
       studentPriceCents: cents(input.studentPriceCents),
