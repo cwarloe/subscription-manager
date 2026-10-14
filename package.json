@@ -1,5 +1,5 @@
 {
-  "name": "app-builder-workspace",
+  "name": "subscription-manager",
   "private": true,
   "sideEffects": false,
   "type": "module",
