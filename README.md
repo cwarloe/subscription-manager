@@ -68,9 +68,14 @@ For another host:
 3. Set `XAI_API_KEY` only if you want live extraction.
 4. Run `npm run build` and start the built server. Migrations run as part of the build.
 
-## Private GitHub repository
+## Repositories (source of truth)
 
-The source is in the private repository [cwarloe/subscription-benefits](https://github.com/cwarloe/subscription-benefits). Later changes:
+| Repo | Visibility | Role |
+| --- | --- | --- |
+| [cwarloe/subscription-manager](https://github.com/cwarloe/subscription-manager) | **Public** (this repo) | Day-to-day working tree. Prefer this tip unless you know the private copy is newer. |
+| [cwarloe/subscription-benefits](https://github.com/cwarloe/subscription-benefits) | Private | Sibling private copy. Useful for work that must stay off the public tree. |
+
+This public README used to say the only source was the private repo. That is no longer accurate: the public tip can be ahead. Sync deliberately when you need both sides to match.
 
 ```bash
 git add .
@@ -78,7 +83,7 @@ git commit -m "Describe the change"
 git push
 ```
 
-Do not commit `.env`, database files, or screenshots.
+Do not commit `.env`, database files, or screenshots. Keep secrets out of the public tree (see `.env.example`).
 
 ## Limits
 
