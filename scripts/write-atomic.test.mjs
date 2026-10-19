@@ -16,6 +16,8 @@ import { handOver, parseWriteAtomicArgs, stagingError } from "./write-atomic.mjs
 
 const TEMPLATE_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT = join(TEMPLATE_ROOT, "scripts/write-atomic.mjs");
+// .grok/ is gitignored; App Builder skill-doc pins only run when the tree is present.
+const HAS_OG_SKILL_REFS = existsSync(join(TEMPLATE_ROOT, ".grok/skills/og/references"));
 
 function makeWorkspace() {
   const root = mkdtempSync(join(tmpdir(), "write-atomic-"));
@@ -164,7 +166,7 @@ test("cli: relative paths follow the script's root, not the caller's cwd", () =>
   assert.equal(existsSync(join(root, "public/og.jpg")), false);
 });
 
-test("every hand-over the og skill prints is one this script accepts", () => {
+test("every hand-over the og skill prints is one this script accepts", { skip: !HAS_OG_SKILL_REFS }, () => {
   // The card and banner recipes live in the skill's references/, not SKILL.md.
   const skillDir = join(TEMPLATE_ROOT, ".grok/skills/og");
   const docs = [
