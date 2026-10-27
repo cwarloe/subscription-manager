@@ -98,7 +98,11 @@ function urlsFromSearch(body: unknown): string[] {
 async function discoverPricedUrl(officialUrl: string, label: string): Promise<string | null> {
   const apiKey = process.env.XAI_API_KEY;
   if (!apiKey) return null;
-  const domain = new URL(officialUrl).hostname.replace(/^www\./, "").split(".").slice(-2).join(".");
+  const domain = new URL(officialUrl).hostname
+    .replace(/^www\./, "")
+    .split(".")
+    .slice(-2)
+    .join(".");
   const response = await fetch("https://api.x.ai/v1/responses", {
     method: "POST",
     signal: AbortSignal.timeout(35_000),
@@ -142,9 +146,13 @@ async function renderedText(url: string): Promise<string | null> {
     const page = await browser.newPage({ userAgent: BROWSER_HEADERS["User-Agent"] });
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: 20_000 });
     await page
-      .waitForFunction(() => /\$\s?\d/.test(document.body?.innerText ?? ""), undefined, { timeout: 8_000 })
+      .waitForFunction(() => /\$\s?\d/.test(document.body?.innerText ?? ""), undefined, {
+        timeout: 8_000,
+      })
       .catch(() => undefined);
-    let text = (await page.locator("body").innerText({ timeout: 5_000 })).replace(/\s+/g, " ").trim();
+    let text = (await page.locator("body").innerText({ timeout: 5_000 }))
+      .replace(/\s+/g, " ")
+      .trim();
     if (!hasDollar(text)) text = pricingText(await page.content());
     return hasDollar(text) ? text.slice(0, 12_000) : null;
   } catch {
@@ -226,13 +234,16 @@ async function extractWithModel(
     }),
   });
   if (!response.ok) {
-    throw new Error(`Price extraction failed (HTTP ${response.status}). Previous data was kept and marked stale if it had been verified.`);
+    throw new Error(
+      `Price extraction failed (HTTP ${response.status}). Previous data was kept and marked stale if it had been verified.`,
+    );
   }
   const body = (await response.json()) as {
     choices?: { message?: { content?: string } }[];
   };
   const content = body.choices?.[0]?.message?.content;
-  if (!content) throw new Error("Price extraction returned an empty response. Previous data was kept.");
+  if (!content)
+    throw new Error("Price extraction returned an empty response. Previous data was kept.");
   return content;
 }
 
@@ -465,13 +476,20 @@ async function refreshTarget(
   }
   if (kind === "service") {
     if (extracted.plans.length === 0) {
-      throw new Error("No plan price on the official page could be matched to a quote from that page.");
+      throw new Error(
+        "No plan price on the official page could be matched to a quote from that page.",
+      );
     }
     const count = await savePlans(sql, userId, targetId, page.finalUrl, extracted.plans);
-    return { message: `Saved ${count} verified plan${count === 1 ? "" : "s"}.`, sourceUrl: page.finalUrl };
+    return {
+      message: `Saved ${count} verified plan${count === 1 ? "" : "s"}.`,
+      sourceUrl: page.finalUrl,
+    };
   }
   if (extracted.annualFeeCents == null && extracted.benefits.length === 0) {
-    throw new Error("No annual fee or benefit on the official page could be matched to a quote from that page.");
+    throw new Error(
+      "No annual fee or benefit on the official page could be matched to a quote from that page.",
+    );
   }
   const message = await saveCard(
     sql,
@@ -585,7 +603,11 @@ export async function startRefresh(
       ...SERVICES.filter((service) => !subIds.has(service.id)),
     ];
     targets = [
-      ...services.map((service) => ({ type: "service" as const, id: service.id, label: service.name })),
+      ...services.map((service) => ({
+        type: "service" as const,
+        id: service.id,
+        label: service.name,
+      })),
       ...cards.map((card) => ({ type: "card" as const, id: card.id, label: card.name })),
     ].slice(0, 8);
   }

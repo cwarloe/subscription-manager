@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { buildMonthEstimate, confirmedTotals, selectPrice } from "./calc.ts";
-import { dollarsToCents, firstOfNextMonth, formatCents, isChargeMonth, monthlyEquivalent, periodKey } from "./money.ts";
+import {
+  dollarsToCents,
+  firstOfNextMonth,
+  formatCents,
+  isChargeMonth,
+  monthlyEquivalent,
+  periodKey,
+} from "./money.ts";
 import type { BenefitInput, EstimateInput, PlanQuoteInput, SubscriptionInput } from "./calc.ts";
 
 const base = (): EstimateInput => ({
@@ -17,7 +24,9 @@ const base = (): EstimateInput => ({
   serviceNames: { netflix: "Netflix", hulu: "Hulu", spotify: "Spotify" },
 });
 
-function plan(partial: Partial<PlanQuoteInput> & Pick<PlanQuoteInput, "id" | "serviceId">): PlanQuoteInput {
+function plan(
+  partial: Partial<PlanQuoteInput> & Pick<PlanQuoteInput, "id" | "serviceId">,
+): PlanQuoteInput {
   return {
     name: "Individual",
     billing: "monthly",
@@ -29,7 +38,9 @@ function plan(partial: Partial<PlanQuoteInput> & Pick<PlanQuoteInput, "id" | "se
   };
 }
 
-function sub(partial: Partial<SubscriptionInput> & Pick<SubscriptionInput, "id" | "serviceId">): SubscriptionInput {
+function sub(
+  partial: Partial<SubscriptionInput> & Pick<SubscriptionInput, "id" | "serviceId">,
+): SubscriptionInput {
   return {
     serviceName: partial.serviceId,
     planQuoteId: null,
@@ -180,8 +191,20 @@ describe("buildMonthEstimate", () => {
       heldCardIds: ["c1"],
       benefits: [benefit],
       subscriptions: [
-        sub({ id: "n", serviceId: "netflix", serviceName: "Netflix", planQuoteId: "pn", userCardId: "c1" }),
-        sub({ id: "h", serviceId: "hulu", serviceName: "Hulu", planQuoteId: "ph", userCardId: "c1" }),
+        sub({
+          id: "n",
+          serviceId: "netflix",
+          serviceName: "Netflix",
+          planQuoteId: "pn",
+          userCardId: "c1",
+        }),
+        sub({
+          id: "h",
+          serviceId: "hulu",
+          serviceName: "Hulu",
+          planQuoteId: "ph",
+          userCardId: "c1",
+        }),
       ],
       plans: [
         plan({ id: "pn", serviceId: "netflix", listCents: 1599 }),
@@ -217,7 +240,9 @@ describe("buildMonthEstimate", () => {
           verification: "verified",
         },
       ],
-      subscriptions: [sub({ id: "n", serviceId: "netflix", serviceName: "Netflix", planQuoteId: "pn" })],
+      subscriptions: [
+        sub({ id: "n", serviceId: "netflix", serviceName: "Netflix", planQuoteId: "pn" }),
+      ],
       plans: [plan({ id: "pn", serviceId: "netflix", listCents: 1599 })],
     });
     assert.equal(estimate.oopReductionCents, 0);
@@ -298,7 +323,9 @@ describe("buildMonthEstimate", () => {
           verification: "verified",
         },
       ],
-      subscriptions: [sub({ id: "n", serviceId: "netflix", serviceName: "Netflix", planQuoteId: "pn" })],
+      subscriptions: [
+        sub({ id: "n", serviceId: "netflix", serviceName: "Netflix", planQuoteId: "pn" }),
+      ],
       plans: [plan({ id: "pn", serviceId: "netflix", listCents: 1000 })],
     });
     assert.equal(estimate.expectedOopCents, 1000);
@@ -329,7 +356,9 @@ describe("buildMonthEstimate", () => {
           verification: "verified",
         },
       ],
-      subscriptions: [sub({ id: "s", serviceId: "spotify", serviceName: "Spotify", planQuoteId: "ps" })],
+      subscriptions: [
+        sub({ id: "s", serviceId: "spotify", serviceName: "Spotify", planQuoteId: "ps" }),
+      ],
       plans: [plan({ id: "ps", serviceId: "spotify", listCents: 1199 })],
       cardFees: [
         {
@@ -361,8 +390,18 @@ describe("buildMonthEstimate", () => {
     const estimate = buildMonthEstimate({
       ...base(),
       subscriptions: [
-        sub({ id: "a", serviceId: "youtube-premium", serviceName: "YouTube Premium", priceOverrideCents: 1399 }),
-        sub({ id: "b", serviceId: "youtube-music", serviceName: "YouTube Music", priceOverrideCents: 1099 }),
+        sub({
+          id: "a",
+          serviceId: "youtube-premium",
+          serviceName: "YouTube Premium",
+          priceOverrideCents: 1399,
+        }),
+        sub({
+          id: "b",
+          serviceId: "youtube-music",
+          serviceName: "YouTube Music",
+          priceOverrideCents: 1099,
+        }),
         sub({ id: "c", serviceId: "netflix", serviceName: "Netflix", priceOverrideCents: 100 }),
         sub({ id: "d", serviceId: "netflix", serviceName: "Netflix", priceOverrideCents: 100 }),
       ],
@@ -385,8 +424,20 @@ describe("buildMonthEstimate", () => {
         }),
       ],
       plans: [
-        plan({ id: "monthly", serviceId: "netflix", name: "Monthly", billing: "monthly", listCents: 2499 }),
-        plan({ id: "annual", serviceId: "netflix", name: "Annual", billing: "annual", listCents: 13900 }),
+        plan({
+          id: "monthly",
+          serviceId: "netflix",
+          name: "Monthly",
+          billing: "monthly",
+          listCents: 2499,
+        }),
+        plan({
+          id: "annual",
+          serviceId: "netflix",
+          name: "Annual",
+          billing: "annual",
+          listCents: 13900,
+        }),
       ],
     });
     assert.equal(estimate.recommendations.length, 1);

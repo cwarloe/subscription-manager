@@ -24,7 +24,8 @@ export const SERVICES: ServiceSeed[] = [
     name: "ChatGPT",
     category: "AI",
     officialUrl: "https://chatgpt.com/pricing/",
-    notes: "Consumer ChatGPT plans are sold on the ChatGPT pricing page. Business plans are separate.",
+    notes:
+      "Consumer ChatGPT plans are sold on the ChatGPT pricing page. Business plans are separate.",
   },
   {
     id: "claude",
@@ -45,7 +46,8 @@ export const SERVICES: ServiceSeed[] = [
     name: "Google Gemini",
     category: "AI",
     officialUrl: "https://gemini.google/subscriptions/",
-    notes: "Some Gemini access is sold inside Google AI or Google One. Do not assume every Google One tier includes it.",
+    notes:
+      "Some Gemini access is sold inside Google AI or Google One. Do not assume every Google One tier includes it.",
   },
   {
     id: "perplexity",
@@ -80,7 +82,8 @@ export const SERVICES: ServiceSeed[] = [
     name: "GitHub Copilot",
     category: "AI",
     officialUrl: "https://github.com/features/copilot/plans",
-    notes: "Student eligibility is plan-specific. Do not treat every Copilot plan as free for students.",
+    notes:
+      "Student eligibility is plan-specific. Do not treat every Copilot plan as free for students.",
   },
   {
     id: "midjourney",
@@ -108,7 +111,8 @@ export const SERVICES: ServiceSeed[] = [
     name: "Spotify",
     category: "Audio",
     officialUrl: "https://www.spotify.com/us/premium/",
-    notes: "U.S. pricing. Student and military offers are separate from the individual plan and are not assumed to make it free.",
+    notes:
+      "U.S. pricing. Student and military offers are separate from the individual plan and are not assumed to make it free.",
   },
   {
     id: "apple-music",
@@ -122,7 +126,8 @@ export const SERVICES: ServiceSeed[] = [
     name: "YouTube Music",
     category: "Audio",
     officialUrl: "https://www.youtube.com/musicpremium",
-    notes: "YouTube Premium includes YouTube Music. A separate YouTube Music plan can duplicate it.",
+    notes:
+      "YouTube Premium includes YouTube Music. A separate YouTube Music plan can duplicate it.",
   },
   {
     id: "amazon-music",
@@ -150,7 +155,8 @@ export const SERVICES: ServiceSeed[] = [
     name: "Netflix",
     category: "Video",
     officialUrl: "https://help.netflix.com/en/node/24926",
-    notes: "US plan prices come from the Netflix Help Center. Ads and extra-member add-ons are separate charges.",
+    notes:
+      "US plan prices come from the Netflix Help Center. Ads and extra-member add-ons are separate charges.",
   },
   {
     id: "hulu",
@@ -296,7 +302,8 @@ export const SERVICES: ServiceSeed[] = [
     id: "microsoft-365",
     name: "Microsoft 365",
     category: "Software",
-    officialUrl: "https://www.microsoft.com/en-us/microsoft-365/buy/compare-all-microsoft-365-products",
+    officialUrl:
+      "https://www.microsoft.com/en-us/microsoft-365/buy/compare-all-microsoft-365-products",
     notes: "Personal and Family are different from Copilot add-ons.",
   },
   {
@@ -304,7 +311,8 @@ export const SERVICES: ServiceSeed[] = [
     name: "Adobe Creative Cloud",
     category: "Software",
     officialUrl: "https://www.adobe.com/creativecloud/plans.html",
-    notes: "Single-app and all-apps plans are different products. Student pricing is not assumed to be free.",
+    notes:
+      "Single-app and all-apps plans are different products. Student pricing is not assumed to be free.",
   },
   {
     id: "canva",
@@ -332,7 +340,8 @@ export const SERVICES: ServiceSeed[] = [
     name: "Xbox Game Pass",
     category: "Gaming",
     officialUrl: "https://www.xbox.com/en-US/xbox-game-pass",
-    notes: "Ultimate, PC, and console plans are different. Ultimate is not assumed to include every other Microsoft subscription.",
+    notes:
+      "Ultimate, PC, and console plans are different. Ultimate is not assumed to include every other Microsoft subscription.",
   },
   {
     id: "playstation-plus",
@@ -367,7 +376,8 @@ export const SERVICES: ServiceSeed[] = [
     name: "Peloton",
     category: "Fitness",
     officialUrl: "https://www.onepeloton.com/membership",
-    notes: "App membership and all-access membership are different. Equipment financing is not included.",
+    notes:
+      "App membership and all-access membership are different. Equipment financing is not included.",
   },
 ];
 
@@ -379,7 +389,8 @@ export const CARDS: CardSeed[] = [
     name: "The Platinum Card from American Express",
     issuer: "American Express",
     officialUrl: "https://www.americanexpress.com/us/credit-cards/card/platinum/",
-    separatesFrom: "Not a Delta SkyMiles card. Delta Platinum is a different product with different credits and fees.",
+    separatesFrom:
+      "Not a Delta SkyMiles card. Delta Platinum is a different product with different credits and fees.",
   },
   {
     id: "amex-gold",
@@ -469,7 +480,8 @@ export const CARDS: CardSeed[] = [
     name: "Capital One Savor Student",
     issuer: "Capital One",
     officialUrl: "https://www.capitalone.com/credit-cards/savor-student/",
-    separatesFrom: "Student product. Not the consumer Savor or SavorOne card. Confirm the live product name on the official page.",
+    separatesFrom:
+      "Student product. Not the consumer Savor or SavorOne card. Confirm the live product name on the official page.",
   },
   {
     id: "cap1-savorone",
@@ -487,7 +499,8 @@ export const CARDS: CardSeed[] = [
     name: "Capital One SavorOne for fair credit",
     issuer: "Capital One",
     officialUrl: "https://www.capitalone.com/credit-cards/savorone/",
-    separatesFrom: "A SavorOne credit-tier variant, not the standard SavorOne rewards offer. Fees can differ.",
+    separatesFrom:
+      "A SavorOne credit-tier variant, not the standard SavorOne rewards offer. Fees can differ.",
   },
   {
     id: "usbank-cash-plus",
@@ -505,7 +518,8 @@ export const CARDS: CardSeed[] = [
     name: "U.S. Bank Cash+ Secured Visa",
     issuer: "U.S. Bank",
     officialUrl: "https://www.usbank.com/credit-cards/cash-plus-secured-visa-credit-card.html",
-    separatesFrom: "Secured variant. Not the unsecured Cash+ Visa Signature card. Confirm the live URL during refresh.",
+    separatesFrom:
+      "Secured variant. Not the unsecured Cash+ Visa Signature card. Confirm the live URL during refresh.",
   },
   {
     id: "delta-blue",
@@ -513,7 +527,8 @@ export const CARDS: CardSeed[] = [
     familyName: "Delta SkyMiles Amex Blue, Gold, Platinum, and Reserve",
     name: "Delta SkyMiles Blue American Express Card",
     issuer: "American Express",
-    officialUrl: "https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-blue-american-express-card/",
+    officialUrl:
+      "https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-blue-american-express-card/",
     separatesFrom: "Not the consumer Amex Platinum or Gold card.",
   },
   {
@@ -522,7 +537,8 @@ export const CARDS: CardSeed[] = [
     familyName: "Delta SkyMiles Amex Blue, Gold, Platinum, and Reserve",
     name: "Delta SkyMiles Gold American Express Card",
     issuer: "American Express",
-    officialUrl: "https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-gold-american-express-card/",
+    officialUrl:
+      "https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-gold-american-express-card/",
     separatesFrom: "Not the consumer American Express Gold Card.",
   },
   {
@@ -531,7 +547,8 @@ export const CARDS: CardSeed[] = [
     familyName: "Delta SkyMiles Amex Blue, Gold, Platinum, and Reserve",
     name: "Delta SkyMiles Platinum American Express Card",
     issuer: "American Express",
-    officialUrl: "https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-platinum-american-express-card/",
+    officialUrl:
+      "https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-platinum-american-express-card/",
     separatesFrom: "Not The Platinum Card from American Express.",
   },
   {
@@ -540,7 +557,8 @@ export const CARDS: CardSeed[] = [
     familyName: "Delta SkyMiles Amex Blue, Gold, Platinum, and Reserve",
     name: "Delta SkyMiles Reserve American Express Card",
     issuer: "American Express",
-    officialUrl: "https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-reserve-american-express-card/",
+    officialUrl:
+      "https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-reserve-american-express-card/",
     separatesFrom: "Not The Platinum Card from American Express.",
   },
   {
@@ -577,7 +595,8 @@ export const CARDS: CardSeed[] = [
     name: "United Club Card",
     issuer: "Chase",
     officialUrl: "https://creditcards.chase.com/travel-credit-cards/united/united-club",
-    separatesFrom: "Consumer Club card. Business Club cards are not included. Confirm the live name, which has been branded Club and Club Infinite.",
+    separatesFrom:
+      "Consumer Club card. Business Club cards are not included. Confirm the live name, which has been branded Club and Club Infinite.",
   },
   {
     id: "aa-mileup",
@@ -594,8 +613,10 @@ export const CARDS: CardSeed[] = [
     familyName: "American Airlines cards from Citi",
     name: "Citi / AAdvantage Platinum Select",
     issuer: "Citi",
-    officialUrl: "https://www.citi.com/credit-cards/citi-aadvantage-platinum-select-world-elite-mastercard",
-    separatesFrom: "Not the Citi strata or thank-you platinum products, and not AAdvantage Globe or Executive.",
+    officialUrl:
+      "https://www.citi.com/credit-cards/citi-aadvantage-platinum-select-world-elite-mastercard",
+    separatesFrom:
+      "Not the Citi strata or thank-you platinum products, and not AAdvantage Globe or Executive.",
   },
   {
     id: "aa-globe",
@@ -612,7 +633,8 @@ export const CARDS: CardSeed[] = [
     familyName: "American Airlines cards from Citi",
     name: "Citi / AAdvantage Executive",
     issuer: "Citi",
-    officialUrl: "https://www.citi.com/credit-cards/citi-aadvantage-executive-world-elite-mastercard",
+    officialUrl:
+      "https://www.citi.com/credit-cards/citi-aadvantage-executive-world-elite-mastercard",
     separatesFrom: "Not Globe or Platinum Select.",
   },
 ];

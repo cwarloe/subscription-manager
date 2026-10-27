@@ -1,6 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, type FormEvent } from "react";
-import { Field, Money, SourceLine, StatusPill, controlClass, useLedger } from "@/components/benefits/chrome";
+import {
+  Field,
+  Money,
+  SourceLine,
+  StatusPill,
+  controlClass,
+  useLedger,
+} from "@/components/benefits/chrome";
 import { deletePlan, savePlan } from "@/lib/benefits/api";
 import { BILLING_PERIODS, dollarsToCents, formatCents } from "@/lib/benefits/money";
 
@@ -25,7 +32,8 @@ function Catalog() {
         <div>
           <h2 className="text-3xl">Service catalog</h2>
           <p className="max-w-2xl text-sm text-pretty text-muted">
-            Fifty services, with official pages and no sample prices. A price appears only after a successful source check or after you enter what you pay.
+            Fifty services, with official pages and no sample prices. A price appears only after a
+            successful source check or after you enter what you pay.
           </p>
         </div>
       </div>
@@ -37,7 +45,12 @@ function Catalog() {
           aria-label="Search services"
           className={`${controlClass} max-w-sm`}
         />
-        <select aria-label="Category" value={category} onChange={(event) => setCategory(event.target.value)} className={`${controlClass} max-w-xs`}>
+        <select
+          aria-label="Category"
+          value={category}
+          onChange={(event) => setCategory(event.target.value)}
+          className={`${controlClass} max-w-xs`}
+        >
           {categories.map((item) => (
             <option key={item}>{item}</option>
           ))}
@@ -50,11 +63,20 @@ function Catalog() {
             <li key={service.id} className="rounded-xl border border-line bg-card p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">{service.category}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                    {service.category}
+                  </p>
                   <h3 className="text-xl">{service.name}</h3>
-                  {service.notes ? <p className="text-sm text-pretty text-muted">{service.notes}</p> : null}
+                  {service.notes ? (
+                    <p className="text-sm text-pretty text-muted">{service.notes}</p>
+                  ) : null}
                   <p className="mt-1 text-xs">
-                    <a className="font-semibold text-forest underline-offset-2 hover:underline" href={service.officialUrl} target="_blank" rel="noreferrer">
+                    <a
+                      className="font-semibold text-forest underline-offset-2 hover:underline"
+                      href={service.officialUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
                       Official page
                     </a>
                   </p>
@@ -92,20 +114,37 @@ function Catalog() {
                         {" · "}Student <Money cents={plan.studentPriceCents} />
                         {" · "}Military <Money cents={plan.militaryPriceCents} />
                       </p>
-                      {plan.eligibility ? <p className="text-muted">Eligibility: {plan.eligibility}</p> : null}
+                      {plan.eligibility ? (
+                        <p className="text-muted">Eligibility: {plan.eligibility}</p>
+                      ) : null}
                       {plan.terms ? <p className="text-muted">Terms: {plan.terms}</p> : null}
-                      <SourceLine url={plan.sourceUrl ?? service.officialUrl} checkedAt={plan.checkedAt} lastSuccessAt={plan.lastSuccessAt} failureNote={plan.failureNote} />
-                      <button type="button" className="mt-1 text-xs font-semibold text-clay" onClick={() => run(() => deletePlan({ data: plan.id }))}>
+                      <SourceLine
+                        url={plan.sourceUrl ?? service.officialUrl}
+                        checkedAt={plan.checkedAt}
+                        lastSuccessAt={plan.lastSuccessAt}
+                        failureNote={plan.failureNote}
+                      />
+                      <button
+                        type="button"
+                        className="mt-1 text-xs font-semibold text-clay"
+                        onClick={() => run(() => deletePlan({ data: plan.id }))}
+                      >
                         Remove quote
                       </button>
                     </li>
                   ))}
                 </ul>
               )}
-              <button type="button" className="mt-3 text-sm font-semibold text-forest" onClick={() => setOpenId(openId === service.id ? null : service.id)}>
+              <button
+                type="button"
+                className="mt-3 text-sm font-semibold text-forest"
+                onClick={() => setOpenId(openId === service.id ? null : service.id)}
+              >
                 {openId === service.id ? "Close form" : "Enter what I pay"}
               </button>
-              {openId === service.id ? <PlanForm serviceId={service.id} onDone={() => setOpenId(null)} /> : null}
+              {openId === service.id ? (
+                <PlanForm serviceId={service.id} onDone={() => setOpenId(null)} />
+              ) : null}
             </li>
           );
         })}
@@ -152,21 +191,75 @@ function PlanForm({ serviceId, onDone }: { serviceId: string; onDone: () => void
   return (
     <form onSubmit={submit} className="mt-3 grid gap-3 border-t border-line pt-3 md:grid-cols-2">
       <Field label="Plan name">
-        <input className={controlClass} value={name} onChange={(event) => setName(event.target.value)} placeholder="Optional. Blank uses the service name." />
+        <input
+          className={controlClass}
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          placeholder="Optional. Blank uses the service name."
+        />
       </Field>
       <Field label="Billing">
-        <select className={controlClass} value={billing} onChange={(event) => setBilling(event.target.value)}>
-          {periods.map((item) => <option key={item} value={item}>{item}</option>)}
+        <select
+          className={controlClass}
+          value={billing}
+          onChange={(event) => setBilling(event.target.value)}
+        >
+          {periods.map((item) => (
+            <option key={item} value={item}>
+              {item}
+            </option>
+          ))}
         </select>
       </Field>
-      <Field label="List price (USD)"><input className={controlClass} inputMode="decimal" value={price} onChange={(event) => setPrice(event.target.value)} placeholder="Unknown if blank" /></Field>
-      <Field label="Student price"><input className={controlClass} inputMode="decimal" value={student} onChange={(event) => setStudent(event.target.value)} /></Field>
-      <Field label="Military price"><input className={controlClass} inputMode="decimal" value={military} onChange={(event) => setMilitary(event.target.value)} /></Field>
-      <Field label="Eligibility"><input className={controlClass} value={eligibility} onChange={(event) => setEligibility(event.target.value)} /></Field>
-      <Field label="Terms and stacking"><input className={controlClass} value={terms} onChange={(event) => setTerms(event.target.value)} /></Field>
+      <Field label="List price (USD)">
+        <input
+          className={controlClass}
+          inputMode="decimal"
+          value={price}
+          onChange={(event) => setPrice(event.target.value)}
+          placeholder="Unknown if blank"
+        />
+      </Field>
+      <Field label="Student price">
+        <input
+          className={controlClass}
+          inputMode="decimal"
+          value={student}
+          onChange={(event) => setStudent(event.target.value)}
+        />
+      </Field>
+      <Field label="Military price">
+        <input
+          className={controlClass}
+          inputMode="decimal"
+          value={military}
+          onChange={(event) => setMilitary(event.target.value)}
+        />
+      </Field>
+      <Field label="Eligibility">
+        <input
+          className={controlClass}
+          value={eligibility}
+          onChange={(event) => setEligibility(event.target.value)}
+        />
+      </Field>
+      <Field label="Terms and stacking">
+        <input
+          className={controlClass}
+          value={terms}
+          onChange={(event) => setTerms(event.target.value)}
+        />
+      </Field>
       {error ? <p className="text-sm text-clay md:col-span-2">{error}</p> : null}
-      <p className="text-xs text-muted md:col-span-2">Saved as “You entered”, not as an official verification.</p>
-      <button type="submit" className="h-11 rounded-lg bg-forest px-4 font-semibold text-forest-ink md:col-span-2">Save plan</button>
+      <p className="text-xs text-muted md:col-span-2">
+        Saved as “You entered”, not as an official verification.
+      </p>
+      <button
+        type="submit"
+        className="h-11 rounded-lg bg-forest px-4 font-semibold text-forest-ink md:col-span-2"
+      >
+        Save plan
+      </button>
     </form>
   );
 }
