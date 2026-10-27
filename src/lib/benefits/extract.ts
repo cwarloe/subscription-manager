@@ -81,7 +81,9 @@ export function htmlToText(html: string): string {
 
 /** Keep the parts of a page that actually mention a price, not the stylesheet. */
 export function pricingText(html: string): string {
-  const jsonLd = [...html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)]
+  const jsonLd = [
+    ...html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi),
+  ]
     .map((match) => decodeEntities(match[1] ?? ""))
     .join("\n");
   const source = collapse(`${jsonLd}\n${htmlToText(html)}`);
@@ -96,12 +98,17 @@ export function pricingText(html: string): string {
     const key = text.slice(0, 100);
     if (seen.has(key)) continue;
     seen.add(key);
-    const score = /\b(month|monthly|year|annual|plan|fee|credit|premium|\/\s?mo)\b/i.test(text) ? 2 : 1;
+    const score = /\b(month|monthly|year|annual|plan|fee|credit|premium|\/\s?mo)\b/i.test(text)
+      ? 2
+      : 1;
     ranked.push({ score, index: match.index, text });
     if (ranked.length >= 250) break;
   }
   ranked.sort((a, b) => b.score - a.score || a.index - b.index);
-  const joined = ranked.map((item) => item.text).join("\n").slice(0, 12_000);
+  const joined = ranked
+    .map((item) => item.text)
+    .join("\n")
+    .slice(0, 12_000);
   return joined.length >= 80 ? joined : source.slice(0, 12_000);
 }
 
@@ -153,7 +160,11 @@ export function priceNearName(pageText: string, name: string, cents: number): bo
   return false;
 }
 
-export function excerptSupportsAmount(pageText: string, excerpt: string, cents: number | null): boolean {
+export function excerptSupportsAmount(
+  pageText: string,
+  excerpt: string,
+  cents: number | null,
+): boolean {
   if (cents == null) return true;
   if (!Number.isInteger(cents) || cents < 0 || cents > MAX_CENTS) return false;
   const page = normalize(pageText);
@@ -231,7 +242,9 @@ export function validateExtraction(raw: string, pageText: string): ExtractedPage
         name,
         billing,
         priceCents,
-        studentPriceCents: excerptSupportsAmount(pageText, excerpt, studentPriceCents) ? studentPriceCents : null,
+        studentPriceCents: excerptSupportsAmount(pageText, excerpt, studentPriceCents)
+          ? studentPriceCents
+          : null,
         militaryPriceCents: excerptSupportsAmount(pageText, excerpt, militaryPriceCents)
           ? militaryPriceCents
           : null,
@@ -260,14 +273,19 @@ export function validateExtraction(raw: string, pageText: string): ExtractedPage
       const rateBps = asCents(row.rate_bps);
       const points = asCents(row.points_per_dollar_milli);
       const excerpt = asString(row.excerpt, 400);
-      const numericClaims = [amountCents, rateBps != null ? rateBps : null].filter((value) => value != null);
+      const numericClaims = [amountCents, rateBps != null ? rateBps : null].filter(
+        (value) => value != null,
+      );
       if (amountCents != null && !excerptSupportsAmount(pageText, excerpt, amountCents)) continue;
       if (amountCents == null && rateBps == null && points == null) continue;
       if (numericClaims.length === 0 && points == null) continue;
       if ((rateBps != null || points != null) && normalize(excerpt).length < 8) continue;
-      if ((rateBps != null || points != null) && !normalize(pageText).includes(normalize(excerpt))) continue;
+      if ((rateBps != null || points != null) && !normalize(pageText).includes(normalize(excerpt)))
+        continue;
       const eligible = Array.isArray(row.eligible_service_ids)
-        ? row.eligible_service_ids.filter((id): id is string => typeof id === "string" && SERVICE_IDS.has(id))
+        ? row.eligible_service_ids.filter(
+            (id): id is string => typeof id === "string" && SERVICE_IDS.has(id),
+          )
         : [];
       const expires = asString(row.expires_on, 10);
       benefits.push({
@@ -300,7 +318,13 @@ export function sameRegistrableHost(officialUrl: string, finalUrl: string): bool
     const official = new URL(officialUrl);
     const final = new URL(finalUrl);
     if (official.protocol !== "https:" || final.protocol !== "https:") return false;
-    const root = (host: string) => host.toLowerCase().replace(/^www\./, "").split(".").slice(-2).join(".");
+    const root = (host: string) =>
+      host
+        .toLowerCase()
+        .replace(/^www\./, "")
+        .split(".")
+        .slice(-2)
+        .join(".");
     return root(official.hostname) === root(final.hostname);
   } catch {
     return false;

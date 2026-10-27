@@ -47,7 +47,11 @@ export function selectPrice(input: {
     options.push({ cents: input.militaryCents, basis: "Military price" });
   }
   if (options.length === 0) {
-    return { cents: null, basis: "No eligible price on this quote", verification: input.verification };
+    return {
+      cents: null,
+      basis: "No eligible price on this quote",
+      verification: input.verification,
+    };
   }
   options.sort((a, b) => a.cents - b.cents || a.basis.localeCompare(b.basis));
   const best = options[0];
@@ -229,7 +233,9 @@ function benefitAvailable(
 function priorUsed(benefit: BenefitInput, yearMonth: string, prior: PriorCreditUse[]): number {
   const key = periodKey(benefit.period, yearMonth);
   return prior
-    .filter((row) => row.benefitId === benefit.id && periodKey(benefit.period, row.yearMonth) === key)
+    .filter(
+      (row) => row.benefitId === benefit.id && periodKey(benefit.period, row.yearMonth) === key,
+    )
     .reduce((sum, row) => sum + row.amountCents, 0);
 }
 
@@ -339,14 +345,22 @@ export function buildMonthEstimate(input: EstimateInput): MonthEstimate {
     }
     const eligible = charges
       .filter((charge) => benefit.eligibleServiceIds.includes(charge.serviceId))
-      .sort((a, b) => (remaining.get(b.subscriptionId) ?? 0) - (remaining.get(a.subscriptionId) ?? 0));
+      .sort(
+        (a, b) => (remaining.get(b.subscriptionId) ?? 0) - (remaining.get(a.subscriptionId) ?? 0),
+      );
     if (eligible.length === 0) continue;
 
     if (benefit.kind === "included_membership") {
       const target = eligible.find((charge) => (remaining.get(charge.subscriptionId) ?? 0) > 0);
       if (!target) continue;
       const open = remaining.get(target.subscriptionId) ?? 0;
-      const cap = benefit.amountCents == null ? open : Math.max(benefit.amountCents - priorUsed(benefit, input.yearMonth, input.priorCreditUses), 0);
+      const cap =
+        benefit.amountCents == null
+          ? open
+          : Math.max(
+              benefit.amountCents - priorUsed(benefit, input.yearMonth, input.priorCreditUses),
+              0,
+            );
       const applied = Math.min(open, cap);
       if (applied <= 0) continue;
       remaining.set(target.subscriptionId, open - applied);
@@ -398,7 +412,10 @@ export function buildMonthEstimate(input: EstimateInput): MonthEstimate {
 
     if (benefit.kind === "cash_back" || benefit.kind === "points") {
       const usedAlready = priorUsed(benefit, input.yearMonth, input.priorCreditUses);
-      let room = benefit.amountCents == null ? Number.POSITIVE_INFINITY : Math.max(benefit.amountCents - usedAlready, 0);
+      let room =
+        benefit.amountCents == null
+          ? Number.POSITIVE_INFINITY
+          : Math.max(benefit.amountCents - usedAlready, 0);
       for (const charge of eligible) {
         if (room <= 0) break;
         if (benefit.kind === "cash_back") {
@@ -495,7 +512,9 @@ export function buildMonthEstimate(input: EstimateInput): MonthEstimate {
   }
 
   const grossChargeCents = charges.reduce((sum, charge) => sum + charge.amountCents, 0);
-  const oopReductionCents = credits.filter((credit) => credit.reducesOop).reduce((sum, credit) => sum + credit.amountCents, 0);
+  const oopReductionCents = credits
+    .filter((credit) => credit.reducesOop)
+    .reduce((sum, credit) => sum + credit.amountCents, 0);
   const knownFees = cardFees.filter((fee) => fee.scheduled && fee.amountCents != null);
   const feeCents = knownFees.reduce((sum, fee) => sum + (fee.amountCents ?? 0), 0);
   const incomplete =
@@ -560,7 +579,11 @@ function buildRecommendations(
           qualifiesMilitary: input.qualifiesMilitary,
           verification: plan.verification,
         });
-        return { plan, price, equivalent: price.cents == null ? null : monthlyEquivalent(price.cents, plan.billing) };
+        return {
+          plan,
+          price,
+          equivalent: price.cents == null ? null : monthlyEquivalent(price.cents, plan.billing),
+        };
       })
       .filter((row) => row.equivalent != null)
       .sort((a, b) => a.equivalent! - b.equivalent!);
@@ -593,12 +616,16 @@ function buildRecommendations(
       serviceName: input.serviceNames[serviceId] ?? subs[0].serviceName,
       currentLabel: currentPlan?.name ?? "Current selection",
       suggestion: `${best.plan.name} (${best.plan.billing}) has the lowest known monthly equivalent${
-        cardBenefit ? `. ${cardBenefit.cardName} lists an included membership that may cover it if you are enrolled.` : "."
+        cardBenefit
+          ? `. ${cardBenefit.cardName} lists an included membership that may cover it if you are enrolled.`
+          : "."
       }`,
       assumptions: [
         "Comparison uses monthly equivalents so an annual upfront price can be compared with a monthly plan. You still pay the annual plan upfront.",
         best.price.basis,
-        best.plan.verification === "stale" ? "The suggested price is stale." : "Uses verified or entered quotes only.",
+        best.plan.verification === "stale"
+          ? "The suggested price is stale."
+          : "Uses verified or entered quotes only.",
         cardBenefit?.enrollmentRequired
           ? "The included membership is not applied unless enrollment is marked."
           : "No extra discount was stacked onto the plan price.",
@@ -608,7 +635,9 @@ function buildRecommendations(
   return recommendations;
 }
 
-export function confirmedTotals(entries: { kind: string; amountCents: number; affectsOop: boolean; points: number | null }[]): {
+export function confirmedTotals(
+  entries: { kind: string; amountCents: number; affectsOop: boolean; points: number | null }[],
+): {
   oopCents: number;
   rewardCashBackCents: number;
   rewardPoints: number;

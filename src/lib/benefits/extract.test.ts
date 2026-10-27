@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { excerptSupportsAmount, htmlToText, priceNearName, pricingText, sameRegistrableHost, validateExtraction } from "./extract.ts";
+import {
+  excerptSupportsAmount,
+  htmlToText,
+  priceNearName,
+  pricingText,
+  sameRegistrableHost,
+  validateExtraction,
+} from "./extract.ts";
 
 describe("extraction", () => {
   it("accepts a price only when the excerpt is on the page", () => {

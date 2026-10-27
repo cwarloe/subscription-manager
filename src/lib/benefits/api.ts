@@ -191,7 +191,8 @@ function period(value: unknown): BillingPeriod {
 }
 
 function kind(value: unknown): BenefitKind {
-  if (typeof value === "string" && BENEFIT_KINDS.includes(value as BenefitKind)) return value as BenefitKind;
+  if (typeof value === "string" && BENEFIT_KINDS.includes(value as BenefitKind))
+    return value as BenefitKind;
   throw new Error("Choose a benefit type.");
 }
 
@@ -455,7 +456,9 @@ async function readLedger(sql: Sql, userId: string): Promise<Ledger> {
       rateBps: row.rate_bps,
       pointsPerDollarMilli: row.points_per_dollar_milli,
       period: row.period,
-      eligibleServiceIds: row.eligible_service_ids ? row.eligible_service_ids.split(",").filter(Boolean) : [],
+      eligibleServiceIds: row.eligible_service_ids
+        ? row.eligible_service_ids.split(",").filter(Boolean)
+        : [],
       enrollmentRequired: row.enrollment_required,
       enrollmentNotes: row.enrollment_notes,
       expiresOn: text(row.expires_on),
@@ -524,7 +527,10 @@ export const getLedger = createServerFn({ method: "GET" })
 export const updateSettings = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator((input: { qualifiesStudent: boolean; qualifiesMilitary: boolean }) => {
-    if (typeof input?.qualifiesStudent !== "boolean" || typeof input?.qualifiesMilitary !== "boolean") {
+    if (
+      typeof input?.qualifiesStudent !== "boolean" ||
+      typeof input?.qualifiesMilitary !== "boolean"
+    ) {
       throw new Error("Settings are invalid.");
     }
     return input;
@@ -556,10 +562,14 @@ type PlanInput = {
 export const savePlan = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator((input: PlanInput) => {
-    if (!SERVICES.some((service) => service.id === input.serviceId)) throw new Error("Unknown service.");
+    if (!SERVICES.some((service) => service.id === input.serviceId))
+      throw new Error("Unknown service.");
     return {
       ...input,
-      name: optionalText(input.name, 120) || SERVICES.find((service) => service.id === input.serviceId)?.name || "What I pay",
+      name:
+        optionalText(input.name, 120) ||
+        SERVICES.find((service) => service.id === input.serviceId)?.name ||
+        "What I pay",
       billing: period(input.billing),
       priceCents: cents(input.priceCents),
       studentPriceCents: cents(input.studentPriceCents),
@@ -569,7 +579,11 @@ export const savePlan = createServerFn({ method: "POST" })
     };
   })
   .handler(async ({ context, data }) => {
-    if (data.priceCents == null && data.studentPriceCents == null && data.militaryPriceCents == null) {
+    if (
+      data.priceCents == null &&
+      data.studentPriceCents == null &&
+      data.militaryPriceCents == null
+    ) {
       throw new Error("Enter at least one price, or leave the plan off the books.");
     }
     const sql = await getSql();
@@ -723,7 +737,8 @@ export const saveFee = createServerFn({ method: "POST" })
     return { cardId: input.cardId, annualFeeCents: cents(input.annualFeeCents) };
   })
   .handler(async ({ context, data }) => {
-    if (data.annualFeeCents == null) throw new Error("Enter the annual fee, including 0 if it is free.");
+    if (data.annualFeeCents == null)
+      throw new Error("Enter the annual fee, including 0 if it is free.");
     const sql = await getSql();
     const existing = await sql<{ id: string }>`
       select id from fee_quotes where user_id = ${context.userId} and card_id = ${data.cardId}
@@ -821,8 +836,10 @@ type SubscriptionInput = {
 export const saveSubscription = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator((input: SubscriptionInput) => {
-    if (!SERVICES.some((service) => service.id === input.serviceId)) throw new Error("Unknown service.");
-    if (!["active", "paused", "canceled"].includes(input.status)) throw new Error("Unknown status.");
+    if (!SERVICES.some((service) => service.id === input.serviceId))
+      throw new Error("Unknown service.");
+    if (!["active", "paused", "canceled"].includes(input.status))
+      throw new Error("Unknown status.");
     return {
       ...input,
       billing: period(input.billing),
@@ -899,7 +916,17 @@ export const saveEntry = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator((input: EntryInput) => {
     const entryKind = required(input.kind, "Type", 40);
-    if (!["charge", "statement_credit", "included_membership", "cash_back", "points", "card_fee", "adjustment"].includes(entryKind)) {
+    if (
+      ![
+        "charge",
+        "statement_credit",
+        "included_membership",
+        "cash_back",
+        "points",
+        "card_fee",
+        "adjustment",
+      ].includes(entryKind)
+    ) {
       throw new Error("Unknown entry type.");
     }
     const amount = cents(input.amountCents);
@@ -994,7 +1021,9 @@ export const snapshotMonth = createServerFn({ method: "POST" })
         )
       `;
     }
-    for (const fee of estimate.cardFees.filter((item) => item.scheduled && item.amountCents != null)) {
+    for (const fee of estimate.cardFees.filter(
+      (item) => item.scheduled && item.amountCents != null,
+    )) {
       await sql`
         insert into monthly_entries (
           id, user_id, year_month, kind, label, amount_cents, affects_oop, note, source
@@ -1025,4 +1054,3 @@ export const stepRefresh = createServerFn({ method: "POST" })
     const { advanceRefresh } = await import("./refresh.server");
     return advanceRefresh(context.userId, data.runId);
   });
-

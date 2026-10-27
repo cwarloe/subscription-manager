@@ -3,18 +3,9 @@ export type Verification = "unknown" | "verified" | "stale" | "user_entered";
 export type BillingPeriod = "monthly" | "quarterly" | "semiannual" | "annual";
 
 export type BenefitKind =
-  | "statement_credit"
-  | "included_membership"
-  | "cash_back"
-  | "points"
-  | "other";
+  "statement_credit" | "included_membership" | "cash_back" | "points" | "other";
 
-export const BILLING_PERIODS: BillingPeriod[] = [
-  "monthly",
-  "quarterly",
-  "semiannual",
-  "annual",
-];
+export const BILLING_PERIODS: BillingPeriod[] = ["monthly", "quarterly", "semiannual", "annual"];
 
 export const BENEFIT_KINDS: BenefitKind[] = [
   "statement_credit",

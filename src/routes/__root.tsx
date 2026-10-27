@@ -9,7 +9,11 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Subscription Benefits" },
-      { name: "description", content: "Compare subscription plans, discounts, and card benefits against what you actually pay." },
+      {
+        name: "description",
+        content:
+          "Compare subscription plans, discounts, and card benefits against what you actually pay.",
+      },
       { name: "theme-color", content: "#0f5c4c" },
     ],
     links: [

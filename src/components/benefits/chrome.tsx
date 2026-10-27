@@ -1,5 +1,13 @@
 import { Link } from "@tanstack/react-router";
-import { createContext, useCallback, useContext, useEffect, useState, type FormEvent, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { GROK_PROVIDERS, authClient, signIn } from "@/lib/auth/client";
 import { UserButton } from "@/lib/auth/gates";
@@ -57,7 +65,9 @@ export function StatusPill({ status }: { status: Verification }) {
           ? "bg-card text-ink border border-line"
           : "bg-paper text-muted border border-line";
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${tone}`}>
+    <span
+      className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${tone}`}
+    >
       {verificationLabel(status)}
     </span>
   );
@@ -66,17 +76,13 @@ export function StatusPill({ status }: { status: Verification }) {
 export function Money({ cents }: { cents: number | null | undefined }) {
   const unknown = cents == null;
   return (
-    <span className={`tabular-nums ${unknown ? "text-muted" : "text-ink"}`}>{formatCents(cents)}</span>
+    <span className={`tabular-nums ${unknown ? "text-muted" : "text-ink"}`}>
+      {formatCents(cents)}
+    </span>
   );
 }
 
-export function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
+export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="grid gap-1 text-sm font-semibold text-ink">
       {label}
@@ -92,16 +98,22 @@ export function AppFrame({ children }: { children: ReactNode }) {
   const { user, isPending } = useCurrentUserState();
   return (
     <div className="min-h-screen">
-      <a href="#content" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-10 focus:bg-card focus:px-3 focus:py-2">
+      <a
+        href="#content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-10 focus:bg-card focus:px-3 focus:py-2"
+      >
         Skip to content
       </a>
       <header className="border-b border-line bg-card">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-forest">Private ledger</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-forest">
+              Private ledger
+            </p>
             <h1 className="text-2xl text-ink">Subscription Benefits</h1>
             <p className="max-w-xl text-sm text-pretty text-muted">
-              Compare what you pay with student offers, military offers, and card credits. Unknown prices stay unknown.
+              Compare what you pay with student offers, military offers, and card credits. Unknown
+              prices stay unknown.
             </p>
           </div>
           {user ? <UserButton /> : <span className="text-sm text-muted">Not signed in</span>}
@@ -151,7 +163,8 @@ function LedgerShell({ children }: { children: ReactNode }) {
         setError(null);
       })
       .catch((reason: unknown) => {
-        if (!cancel) setError(reason instanceof Error ? reason.message : "Could not load your ledger.");
+        if (!cancel)
+          setError(reason instanceof Error ? reason.message : "Could not load your ledger.");
       })
       .finally(() => {
         if (!cancel) setLoading(false);
@@ -173,19 +186,16 @@ function LedgerShell({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const pump = useCallback(
-    async (runId: string) => {
-      let current = await stepRefresh({ data: { runId } });
+  const pump = useCallback(async (runId: string) => {
+    let current = await stepRefresh({ data: { runId } });
+    setRefreshRun(current);
+    while (current.status === "running") {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      current = await stepRefresh({ data: { runId } });
       setRefreshRun(current);
-      while (current.status === "running") {
-        await new Promise((resolve) => setTimeout(resolve, 300));
-        current = await stepRefresh({ data: { runId } });
-        setRefreshRun(current);
-      }
-      setLedger(await getLedger());
-    },
-    [],
-  );
+    }
+    setLedger(await getLedger());
+  }, []);
 
   const refreshSources = useCallback(
     async (scope: "all" | "service" | "card", targetId?: string) => {
@@ -239,7 +249,9 @@ function LedgerShell({ children }: { children: ReactNode }) {
           </p>
         ) : null}
         {refreshRun ? <RefreshPanel run={refreshRun} /> : null}
-        <div id="content">{loading && !ledger ? <p className="text-muted">Loading saved records…</p> : children}</div>
+        <div id="content">
+          {loading && !ledger ? <p className="text-muted">Loading saved records…</p> : children}
+        </div>
       </div>
     </LedgerContext.Provider>
   );
@@ -296,7 +308,8 @@ export function SignInPanel() {
       <section className="rounded-xl border border-line bg-card p-5">
         <h2 className="text-2xl">Sign in</h2>
         <p className="mt-2 text-sm text-pretty text-muted">
-          This ledger is private. Your subscriptions, card selections, and confirmed spending stay on your account.
+          This ledger is private. Your subscriptions, card selections, and confirmed spending stay
+          on your account.
         </p>
         <div className="mt-4 grid gap-2">
           {GROK_PROVIDERS.map((provider) => (
@@ -312,21 +325,47 @@ export function SignInPanel() {
         </div>
       </section>
       <form onSubmit={submitEmail} className="rounded-xl border border-line bg-card p-5">
-        <h2 className="text-2xl">{mode === "up" ? "Create the owner account" : "Email and password"}</h2>
+        <h2 className="text-2xl">
+          {mode === "up" ? "Create the owner account" : "Email and password"}
+        </h2>
         <div className="mt-4 grid gap-3">
           {mode === "up" ? (
             <Field label="Name">
-              <input className={controlClass} value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" />
+              <input
+                className={controlClass}
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                autoComplete="name"
+              />
             </Field>
           ) : null}
           <Field label="Email">
-            <input className={controlClass} type="email" required value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" />
+            <input
+              className={controlClass}
+              type="email"
+              required
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              autoComplete="email"
+            />
           </Field>
           <Field label="Password">
-            <input className={controlClass} type="password" required minLength={8} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === "up" ? "new-password" : "current-password"} />
+            <input
+              className={controlClass}
+              type="password"
+              required
+              minLength={8}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              autoComplete={mode === "up" ? "new-password" : "current-password"}
+            />
           </Field>
           {message ? <p className="text-sm text-clay">{message}</p> : null}
-          <button type="submit" disabled={pending} className="h-11 rounded-lg bg-forest px-4 font-semibold text-forest-ink disabled:opacity-60">
+          <button
+            type="submit"
+            disabled={pending}
+            className="h-11 rounded-lg bg-forest px-4 font-semibold text-forest-ink disabled:opacity-60"
+          >
             {pending ? "Working…" : mode === "up" ? "Create account" : "Sign in"}
           </button>
           <button
@@ -356,13 +395,20 @@ export function SourceLine({
   return (
     <p className="text-xs text-muted">
       {url ? (
-        <a className="font-semibold text-forest underline-offset-2 hover:underline" href={url} target="_blank" rel="noreferrer">
+        <a
+          className="font-semibold text-forest underline-offset-2 hover:underline"
+          href={url}
+          target="_blank"
+          rel="noreferrer"
+        >
           Source
         </a>
       ) : (
         "No source saved"
       )}
-      {lastSuccessAt ? ` · Last success ${lastSuccessAt.slice(0, 16).replace("T", " ")}` : " · No successful check"}
+      {lastSuccessAt
+        ? ` · Last success ${lastSuccessAt.slice(0, 16).replace("T", " ")}`
+        : " · No successful check"}
       {checkedAt ? ` · Last attempt ${checkedAt.slice(0, 16).replace("T", " ")}` : ""}
       {failureNote ? ` · ${failureNote}` : ""}
     </p>
