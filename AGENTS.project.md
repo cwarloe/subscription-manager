@@ -20,20 +20,19 @@ this repo. Follow both. Where they differ, this file describes the repo.
 ```bash
 npm ci
 npm run typecheck
-npm run lint        # 0 errors expected; 1 existing warning
-npm test            # 4 brand-check tests skip without .grok/ (expected)
+npm run lint          # 0 errors expected; 1 existing warning (useLedger fast-refresh)
+npm run format:check
+npm test              # 4 brand-check tests skip without .grok/ (expected)
 ```
 
 - `npm run check:auth` is not part of CI. It compares the **running** dev
   server's `VITE_AUTH_ENABLED` with the next build's. Start `npm run dev` first.
   Exit 0 = agree, 1 = diverged, 2 = could not reach the dev server. Its logic is
   unit-tested in `scripts/check-auth-invariant.test.mjs`, which `npm test` runs.
-- Formatting: `.prettierrc` exists, but CI does not check it, and about 52 files
-  are not Prettier-clean today. Don't run `npm run format` on the whole repo as
-  part of another change. That rewrites those 52 files and makes syncing with
-  `subscription-benefits` harder. Format the files you touch
-  (`npx prettier --write <files>`), or do a whole-repo format as its own
-  commit, kept in step with the sibling repo.
+- Formatting: Prettier is enforced in CI via `format:check` (added in #6/#7).
+  Prefer formatting only the files you touch (`npx prettier --write <files>`).
+  A whole-repo `npm run format` is fine when intentional; keep it in step with
+  the private sibling `subscription-benefits` when you sync.
 
 ## Ledger rules (details in README)
 
