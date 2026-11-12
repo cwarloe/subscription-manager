@@ -22,3 +22,8 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm test
+      # Build the app too. DATABASE_URL is unset here, so db:migrate skips and
+      # the PGLite fallback migrates itself at runtime.
+      - run: npm run build
+        env:
+          DATABASE_URL: ""
