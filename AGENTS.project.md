@@ -23,6 +23,7 @@ npm run typecheck
 npm run lint          # 0 errors expected; 1 existing warning (useLedger fast-refresh)
 npm run format:check
 npm test              # 4 brand-check tests skip without .grok/ (expected)
+npm run build         # DATABASE_URL empty here, so migrate skips; PGLite covers preview
 ```
 
 - `npm run check:auth` is not part of CI. It compares the **running** dev
